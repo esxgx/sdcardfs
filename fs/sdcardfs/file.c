@@ -177,8 +177,12 @@ static int sdcardfs_mmap(struct file *file, struct vm_area_struct *vma)
 			goto out;
 		}
 		saved_vm_ops = vma->vm_ops; /* save: came from lower ->mmap */
+#if 1
+		err = 0;
+#else
 		err = do_munmap(current->mm, vma->vm_start,
 				vma->vm_end - vma->vm_start);
+#endif
 		if (err) {
 			printk(KERN_ERR "sdcardfs: do_munmap failed %d\n", err);
 			goto out;

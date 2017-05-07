@@ -398,7 +398,7 @@ static struct configfs_subsystem sdcardfs_packages_subsys = {
 		},
 	},
 };
-
+#if 0
 static int configfs_sdcardfs_init(void)
 {
 	int ret;
@@ -419,6 +419,7 @@ static void configfs_sdcardfs_exit(void)
 {
 	configfs_unregister_subsystem(&sdcardfs_packages_subsys);
 }
+#endif
 
 int packagelist_init(void)
 {
@@ -431,13 +432,13 @@ int packagelist_init(void)
 	}
 
 	pkgl_data_all = packagelist_create();
-	configfs_sdcardfs_init();
+	//configfs_sdcardfs_init();
         return 0;
 }
 
 void packagelist_exit(void)
 {
-	configfs_sdcardfs_exit();
+	//configfs_sdcardfs_exit();
 	packagelist_destroy(pkgl_data_all);
 	if (hashtable_entry_cachep)
 		kmem_cache_destroy(hashtable_entry_cachep);

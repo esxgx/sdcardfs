@@ -355,7 +355,11 @@ static int sdcardfs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode
 			goto out;
 		}
 
+#if 1
+		nomedia_dir_name = d_path(&lower_path, page_buf, PAGE_SIZE);
+#else
 		nomedia_dir_name = d_absolute_path(&lower_path, page_buf, PAGE_SIZE);
+#endif
 		if (IS_ERR(nomedia_dir_name)) {
 			free_page((unsigned long)page_buf);
 			printk(KERN_ERR "sdcardfs: failed to get .nomedia dir name\n");
