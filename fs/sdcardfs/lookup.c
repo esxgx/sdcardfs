@@ -20,6 +20,7 @@
 
 #include "sdcardfs.h"
 #include "linux/delay.h"
+#include "../internal.h"
 
 /* The dentry cache is just so we have properly sized dentries */
 static struct kmem_cache *sdcardfs_dentry_cachep;
@@ -307,7 +308,7 @@ static struct dentry *__sdcardfs_lookup(struct dentry *dentry,
 	/* instatiate a new negative dentry */
 	this.name = name;
 	this.len = strlen(name);
-	this.hash = full_name_hash(this.name, this.len);
+	this.hash = full_name_hash(lower_dir_dentry, this.name, this.len);
 	lower_dentry = d_lookup(lower_dir_dentry, &this);
 	if (lower_dentry)
 		goto setup_lower;
