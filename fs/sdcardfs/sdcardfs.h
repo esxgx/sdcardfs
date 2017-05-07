@@ -44,6 +44,9 @@
 #include <linux/string.h>
 #include "multiuser.h"
 
+/* the file system magic number */
+#define SDCARDFS_SUPER_MAGIC	0x5dca2df5
+
 /* the file system name */
 #define SDCARDFS_NAME "sdcardfs"
 
