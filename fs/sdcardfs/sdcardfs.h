@@ -36,15 +36,17 @@
 #include <linux/kobject.h>
 #endif
 
+#define __SDCARDFS_MISC__COMPAT_DEFS
+#include "misc.h"
 #include "multiuser.h"
 
 #ifndef SDCARDFS_SUPER_MAGIC
-/* the file system magic number */
+/* the sdcard file system magic number */
 #define SDCARDFS_SUPER_MAGIC	0x5dca2df5
 #endif
 
 #ifndef SDCARDFS_NAME
-/* the file system name */
+/* the sdcard file system name */
 #define SDCARDFS_NAME __stringify(__SDCARDFS__)
 #endif
 
@@ -83,8 +85,8 @@ void __free_fs_struct(struct fs_struct *fs)
 	kfree(fs);
 }
 
-#define revert_current_fs	override_current_fs
-#define free_fs_struct	__free_fs_struct
+#define revert_current_fs       override_current_fs
+#define free_fs_struct          __free_fs_struct
 
 /* OVERRIDE_CRED() and REVERT_CRED()
  *  - OVERRIDE_CRED()
@@ -97,7 +99,7 @@ void __free_fs_struct(struct fs_struct *fs)
 #define OVERRIDE_CRED(sdcardfs_sbi, saved_cred) (saved_cred = override_fsids(sdcardfs_sbi))
 #define REVERT_CRED(saved_cred)	revert_fsids(saved_cred)
 
-/* Android 6.0 runtime permissions model */
+/* runtime permissions model since Android M */
 
 /* Permission mode for a specific node. Controls how file permissions
  * are derived for children nodes. */
@@ -245,21 +247,29 @@ static inline struct super_block *sdcardfs_lower_super(
 struct sdcardfs_tree_entry {
 	rwlock_t lock;
 
+	/* used to overlay the obb dir for each user */
 	struct dentry *ovl;
 	struct {
 		struct dentry *dentry;
 
-		/* if sdcardfs_disconnected, use ino/genertion pair
-		   to connect real again. */
-		unsigned long	ino;
+		/*
+		 * if the corresponding underlayfs real dentry was released,
+		 * the ino/generation pair will be used to reactivate real
+		 * dentry again.
+		 */
+		unsigned long ino;
 		__u32 generation;
 
 		bool dentry_invalid;
+
+		/* much faster than checking d_parent and d_name in many cases */
 		unsigned d_seq;
 	} real;
 
-	/* a number used to decide whether permissions
-	   should be updated from the parent when revalidated */
+	/*
+	 * a number used to decide whether permissions
+	 * should be updated from the parent when revalidated
+	 */
 	unsigned revision;
 
 	/* state derived based on current position in hierachy */
@@ -450,11 +460,13 @@ static inline void __fix_derived_permission(
 	inode->i_uid = make_kuid(&init_user_ns, te->d_uid);
 
 	if (opts->gid == AID_SDCARD_RW) {
-		/* As an optimization, certain trusted system components only run
+		/*
+		 * As an optimization, certain trusted system components only run
 		 * as owner but operate across all users. Since we're now handing
 		 * out the sdcard_rw GID only to trusted apps, we're okay relaxing
 		 * the user boundary enforcement for the default view. The UIDs
-		 * assigned to app directories are still multiuser aware. */
+		 * assigned to app directories are still multiuser aware.
+		 */
 		inode->i_gid = make_kgid(&init_user_ns, AID_SDCARD_RW);
 	} else {
 		inode->i_gid = make_kgid(&init_user_ns,
@@ -465,13 +477,17 @@ static inline void __fix_derived_permission(
 	visible_mode = 0775 & ~opts->mask;
 
 	if (te->perm == PERM_PRE_ROOT) {
-		/* Top of multi-user view should always be visible to ensure
-		 * secondary users can traverse inside. */
+		/*
+		 * Top of multi-user view should always be visible to ensure
+		 * secondary users can traverse inside.
+		 */
 		visible_mode = 0711;
 	} else if (te->under_android) {
-		/* Block "other" access to Android directories, since only apps
+		/*
+		 * Block "other" access to Android directories, since only apps
 		 * belonging to a specific user should be in there; we still
-		 * leave +x open for the default view. */
+		 * leave +x open for the default view.
+		 */
 		if (opts->gid == AID_SDCARD_RW)
 			visible_mode = visible_mode & ~0006;
 		else
@@ -571,8 +587,10 @@ permission_denied_to_remove(struct inode *dir, const char *name)
 }
 
 #ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
-/* Return 1, if a disk has enough free space, otherwise 0.
- * We assume that any files can not be overwritten. */
+/*
+ * Return 1, if the disk has enough free space, otherwise 0.
+ * We assume that any files can not be overwritten.
+ */
 static inline int check_min_free_space(struct super_block *sb,
 	size_t size, int isdir)
 {
@@ -641,4 +659,6 @@ static inline void sdcardfs_copy_and_fix_attrs(struct inode *dest, const struct 
 	dest->i_flags = src->i_flags;
 	set_nlink(dest, src->i_nlink);
 }
+
 #endif	/* not _SDCARDFS_H_ */
+

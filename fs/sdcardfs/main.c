@@ -49,9 +49,13 @@ static const match_table_t sdcardfs_tokens = {
 
 static void default_options(struct sdcardfs_mount_options *opts)
 {
-	/* by default, we use AID_MEDIA_RW as uid, gid */
+	/*
+	 * always use AID_MEDIA_RW as underlayfs uid, gid by default
+	 * and it is dangerous to modify at runtime
+	 */
 	opts->fs_low_uid = AID_MEDIA_RW;
 	opts->fs_low_gid = AID_MEDIA_RW;
+
 	opts->mask = 0;
 	opts->multiuser = false;
 	opts->fs_user_id = 0;
@@ -191,8 +195,7 @@ static int __sdcardfs_setup_root(
 	return 0;
 }
 
-static inline
-struct dentry *__prepare_dir(
+static struct dentry *make_dir(
 	const char *path_s,
 	mode_t mode, uid_t uid, gid_t gid)
 {
@@ -209,6 +212,7 @@ struct dentry *__prepare_dir(
 			dent = ERR_PTR(err);
 		} else {
 			struct iattr attrs = {.ia_valid = ATTR_UID | ATTR_GID};
+
 			attrs.ia_uid = make_kuid(&init_user_ns, uid);
 			attrs.ia_gid = make_kgid(&init_user_ns, gid);
 
@@ -223,13 +227,11 @@ struct dentry *__prepare_dir(
 	return dent;
 }
 
-static
-struct dentry *prepare_dir(
+static struct dentry *prepare_dir(
 	const char *path_s,
 	mode_t mode, uid_t uid, gid_t gid)
 {
-	struct dentry *dir =
-		__prepare_dir(path_s, mode, uid, gid);
+	struct dentry *dir = makedir(path_s, mode, uid, gid);
 	if (dir == NULL) {
 		struct path path;
 		int err = kern_path(path_s, LOOKUP_DIRECTORY, &path);
@@ -248,8 +250,10 @@ struct dentry *prepare_dir(
 	return dir;
 }
 
-/* There is no need to lock the sdcardfs_super_info's rwsem as there is no
-   way anyone can have a reference to the superblock at this point in time. */
+/*
+ * there is no way that anyone can have a reference to
+ * the superblock at this point in time.
+ */
 static int sdcardfs_read_super(struct super_block *sb,
 	const char *dev_name, void *raw_data, int silent)
 {
@@ -337,26 +341,25 @@ static int sdcardfs_read_super(struct super_block *sb,
 		goto out_sput;
 	}
 
-	/* make the sdcardfs root dentry */
+	/* generate the sdcardfs root dentry */
 	sb->s_root = d_make_root(inode);
 	if (sb->s_root == NULL) {
 		err = -ENOMEM;
 		goto out_iput;
 	}
 
-	/* setup tree entry for root dentry */
+	/* setup a tree_entry for root dentry */
 	err = __sdcardfs_setup_root(sb->s_root, lower_path.dentry,
 		sbi->options.fs_user_id, sbi->options.multiuser);
 	if (err)
 		goto out_freeroot;
 
-	/* save obbpath(devpath) to sbi */
+	/* save underlayfs rootdir(devpath) to sbi */
 	sbi->devpath_s = __getname();
 	if (sbi->devpath_s == NULL) {
 		err = -ENOMEM;
 		goto out_freetreeentry;
 	}
-
 	snprintf(sbi->devpath_s, PATH_MAX, "%s", dev_name);
 	sbi->devpath_s[PATH_MAX - 1] = '\0';
 
@@ -392,11 +395,21 @@ static int sdcardfs_read_super(struct super_block *sb,
 		}
 	}
 
-	if (!sbi->options.multiuser) {
+	if (!sbi->options.multiuser)
+		/*
+		 * if sdcardfs runs in the single-user mode, there is no need
+		 * to generate a shared obb.
+		 */
 		sbi->shared_obb = NULL;
-	} else {
+	else {
+		/*
+		 * if sdcardfs runs in the multi-user mode, a share obb dir
+		 * will be generated in advance.
+		 */
 		struct dentry *dir;
-		struct fs_struct *saved_fs = override_current_fs(sbi->override_fs);
+		struct fs_struct *saved_fs =
+			override_current_fs(sbi->override_fs);
+
 		dir = prepare_dir("obb", 0775, sbi->options.fs_low_uid,
 			sbi->options.fs_low_gid);
 		revert_current_fs(saved_fs);
@@ -409,9 +422,11 @@ static int sdcardfs_read_super(struct super_block *sb,
 		sbi->shared_obb = dir;
 	}
 
-	/* No need to call interpose because we already have
-	   a positive dentry, which was instantiated by
-	   d_make_root. Just need to d_rehash it. */
+	/*
+	 * No need to call interpose because we already have
+	 * a positive dentry, which was instantiated by
+	 * d_make_root. Just need to d_rehash it.
+	 */
 	d_rehash(sb->s_root);
 
 	if (!silent)
@@ -424,8 +439,10 @@ out_freefsstruct:
 out_putname:
 	__putname(sbi->devpath_s);
 out_freetreeentry:
-	/* because dput_final will go into d_release, so it is no need
-	   to call sdcardfs_free_tree_entry(sb->s_root) explicitly; */
+	/*
+	 * dput_final will go into d_release, there is no need to
+	 * call sdcardfs_free_tree_entry(sb->s_root) explicitly;
+	 */
 	dget(lower_path.dentry);
 out_freeroot:
 	dput(sb->s_root);

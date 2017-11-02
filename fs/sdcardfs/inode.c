@@ -67,17 +67,13 @@ static struct dentry *dentry_creat(
 
 int touch_nomedia(struct dentry *parent)
 {
-	int err;
 	struct dentry *d_nomedia;
 
 	d_nomedia = dentry_creat(parent, ".nomedia", sizeof(".nomedia")-1);
 	if (IS_ERR(d_nomedia))
-		err = PTR_ERR(d_nomedia);
-	else {
-		dput(d_nomedia);
-		err = 0;
-	}
-	return err;
+		return PTR_ERR(d_nomedia);
+	dput(d_nomedia);
+	return 0;
 }
 
 static int sdcardfs_mkdir(struct inode *dir,
@@ -185,11 +181,9 @@ struct dentry *__lookup_rename_ci(
 	struct sdcardfs_sb_info *sbi,
 	struct dentry *dir, struct qstr *name)
 {
-	struct dentry *ret;
+	struct dentry *ret = NULL;
 
-	if (sbi->ci->lookup == NULL)
-		return NULL;
-	else {
+	if (sbi->ci->lookup != NULL) {
 		struct path path = {.dentry = dir, .mnt = sbi->lower_mnt};
 
 		ret = sbi->ci->lookup(&path, name, true);
@@ -197,13 +191,16 @@ struct dentry *__lookup_rename_ci(
 		if (IS_ERR(ret)) {
 			if (ret == ERR_PTR(-ENOENT))
 				ret = NULL;
-		/* hashed (see d_delete) and unhashed(by d_alloc) but negative */
+		/*
+		 * hashed (see d_delete) or
+		 * unhashed(by d_alloc) but negative
+		 */
 		} else if (d_is_negative(ret)) {
 			dput(ret);
 			ret = ERR_PTR(-ESTALE);
 		}
-		return ret;
 	}
+	return ret;
 }
 #endif
 

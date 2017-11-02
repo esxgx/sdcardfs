@@ -11,8 +11,10 @@
  */
 #include "sdcardfs.h"
 
-/* could be triggered after deactivate_locked_super()
-   is called, thus including umount and failed to initialize. */
+/*
+ * could be triggered after deactivate_locked_super()
+ * is called, thus including umount and failed to initialize.
+ */
 static void sdcardfs_put_super(struct super_block *sb)
 {
 	struct vfsmount *lower_mnt;
@@ -98,8 +100,11 @@ static int sdcardfs_statfs(struct dentry *dentry, struct kstatfs *buf)
 	return err;
 }
 
-/* @flags: numeric mount options
-   @options: mount options string */
+/*
+ * Handle the sdcard file system remount operation
+ * @flags: numeric mount options
+ * @options: mount options string
+ */
 static int sdcardfs_remount_fs(struct super_block *sb, int *flags, char *options)
 {
 	int err = 0;
@@ -123,7 +128,7 @@ static int sdcardfs_remount_fs(struct super_block *sb, int *flags, char *options
  */
 static void sdcardfs_evict_inode(struct inode *inode)
 {
-	truncate_inode_pages(&inode->i_data, 0);
+	truncate_inode_pages_final(&inode->i_data);
 	clear_inode(inode);
 }
 
@@ -140,11 +145,10 @@ static void sdcardfs_umount_begin(struct super_block *sb)
 		lower_sb->s_op->umount_begin(lower_sb);
 }
 
-static int sdcardfs_show_options(struct seq_file *m,
-	struct dentry *root)
+static int sdcardfs_show_options(struct seq_file *m, struct dentry *root)
 {
-	struct sdcardfs_mount_options *opts
-		= &SDCARDFS_SB(root->d_sb)->options;
+	struct super_block *sb = root->d_sb;
+	struct sdcardfs_mount_options *opts = &SDCARDFS_SB(sb)->options;
 
 #define xx(...)  seq_printf(m, __VA_ARGS__)
 #define __SDCARDFS_MISC__SHOW_OPTIONS
@@ -161,3 +165,4 @@ const struct super_operations sdcardfs_sops = {
 	.show_options   = sdcardfs_show_options,
 	.drop_inode     = generic_delete_inode,
 };
+

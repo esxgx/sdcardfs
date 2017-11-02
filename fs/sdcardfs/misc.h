@@ -28,6 +28,38 @@
 		xx(",reserved_mb=%u", opts->reserved_mb);
 	if (opts->quiet)
 		xx(",quiet");
+#elif defined(__SDCARDFS_MISC__COMPAT_DEFS)
+#undef __SDCARDFS_MISC__COMPAT_DEFS
+
+#ifndef d_inode
+#define d_inode(x)  ((x)->d_inode)
+#endif
+
+#ifndef inode_lock_nested
+#define inode_lock_nested(x, y) mutex_lock_nested(&(x)->i_mutex, (y))
+#endif
+
+#ifndef inode_lock
+#define inode_lock(x) mutex_lock(&(x)->i_mutex)
+#endif
+
+#ifndef inode_unlock
+#define inode_unlock(x) mutex_unlock(&(x)->i_mutex)
+#endif
+
+#ifndef lockless_dereference
+#define lockless_dereference(p) ({ \
+        typeof(p) _________p1 = ACCESS_ONCE(p); \
+        typeof(*(p)) *___typecheck_p __maybe_unused; \
+        smp_read_barrier_depends(); /* Dependency order vs. p above. */ \
+        (_________p1); \
+})
+#endif
+
+#ifndef d_really_is_negative
+#define d_really_is_negative(dentry) ((dentry)->d_inode == NULL)
+#endif
+
 #else
 #error precompiled macro is not defined
 #endif

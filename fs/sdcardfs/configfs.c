@@ -57,6 +57,7 @@ static struct configfs_attribute _pfx##_attr_##_name = {	\
 
 struct sdcardfs_configfs_attribute {
 	struct configfs_attribute attr;
+
 	ssize_t (*show)(struct configfs_item *, char *);
 	ssize_t (*store)(struct configfs_item *, const char *, size_t);
 };
@@ -122,9 +123,9 @@ static struct configfs_item_operations sdcardfs_configfs_pkgdir_item_ops = {
 };
 
 static struct config_item_type sdcardfs_configfs_pkgdir_type = {
-	.ct_attrs	= sdcardfs_configfs_pkgdir_attrs,
-	.ct_item_ops	= &sdcardfs_configfs_pkgdir_item_ops,
-	.ct_owner	= THIS_MODULE,
+	.ct_attrs       = sdcardfs_configfs_pkgdir_attrs,
+	.ct_item_ops    = &sdcardfs_configfs_pkgdir_item_ops,
+	.ct_owner       = THIS_MODULE,
 };
 
 /* rootdir consists of all pkgdirs + an extersion dir */
