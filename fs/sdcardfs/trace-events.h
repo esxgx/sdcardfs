@@ -1,5 +1,5 @@
 #undef TRACE_SYSTEM
-#define TRACE_SYSTEM sdcardfs
+#define TRACE_SYSTEM __SDCARDFS__
 
 #if !defined(__SDCARDFS_TRACE_EVENTS_H) || defined(TRACE_HEADER_MULTI_READ)
 #define __SDCARDFS_TRACE_EVENTS_H

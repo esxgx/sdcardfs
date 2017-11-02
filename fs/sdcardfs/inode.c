@@ -1,4 +1,4 @@
-/* vim:set ts=4 sw=4 tw=0 noet ft=c:
+/* vim:set ts=8 sw=8 tw=0 noet ft=c:
  *
  * fs/sdcardfs/inode.c
  *

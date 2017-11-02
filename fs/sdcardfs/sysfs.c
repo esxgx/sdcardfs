@@ -1,4 +1,4 @@
-/* vim:set ts=4 sw=4 tw=0 noet ft=c:
+/* vim:set ts=8 sw=8 tw=0 noet ft=c:
  *
  * fs/sdcardfs/sysfs.c
  *
@@ -21,8 +21,8 @@ sdcardfs_sysfs_sb_blocked_users_show(struct kobject *kobj,
 	ssize_t len = 0;
 
 	if (sbi->blocked_userid >= 0)
-		len = snprintf(buf, PAGE_SIZE, "%d %d",
-			sbi->blocked_userid, sbi->appid_excluded);
+		len = sprintf(buf, "%d %d", sbi->blocked_userid,
+			sbi->appid_excluded);
 	buf[len++] = '\n';
 	buf[len++] = '\0';
 	return len;

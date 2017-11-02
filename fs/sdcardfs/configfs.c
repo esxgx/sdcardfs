@@ -1,4 +1,4 @@
-/* vim:set ts=4 sw=4 tw=0 noet ft=c:
+/* vim:set ts=8 sw=8 tw=0 noet ft=c:
  *
  * fs/sdcardfs/configfs.c
  *
@@ -20,7 +20,7 @@ sdcardfs_configfs_pkgdir_appid_show(
 	struct sdcardfs_packagelist_entry *pkg = container_of(
 		item, struct sdcardfs_packagelist_entry, item);
 
-	return scnprintf(page, PAGE_SIZE, "%d\n", (int)pkg->appid);
+	return sprintf(page, "%d\n", (int)pkg->appid);
 }
 
 static ssize_t sdcardfs_configfs_pkgdir_appid_store(

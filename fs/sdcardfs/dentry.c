@@ -1,4 +1,4 @@
-/* vim:set ts=4 sw=4 tw=0 noet ft=c:
+/* vim:set ts=8 sw=8 tw=0 noet ft=c:
  *
  * fs/sdcardfs/dentry.c
  *
@@ -259,7 +259,7 @@ static int sdcardfs_d_revalidate(
 ) {
 	/* d_revalidate should not be called on root dentry.
 	   and we dont have disconnected dentry now */
-	BUG_ON(READ_ONCE(dentry->d_parent) == dentry));
+	BUG_ON(READ_ONCE(dentry->d_parent) == dentry);
 	if (flags & LOOKUP_RCU)
 		return __sdcardfs_d_revalidate_fast(dentry, flags);
 	return __sdcardfs_d_revalidate_slow(dentry, flags);

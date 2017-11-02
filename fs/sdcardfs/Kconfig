@@ -1,13 +1,38 @@
 config SDCARD_FS
-	tristate "sdcard file system"
+	tristate "Sdcardfs file system"
 	depends on CONFIGFS_FS
 	default n
 	help
 	  Sdcardfs is based on Wrapfs file system.
 
 config SDCARD_FS_FADV_NOACTIVE
-	bool "sdcardfs fadvise noactive support"
-	depends on FADV_NOACTIVE
+	bool "Sdcardfs fadvise noactive support"
+	depends on (FADV_NOACTIVE && SDCARD_FS)
 	default y
 	help
 	  Sdcardfs supports fadvise noactive mode.
+
+config SDCARD_FS_CASE_INSENSITIVE
+	bool "Sdcardfs case-insensitive support"
+	depends on SDCARD_FS
+	default y
+	help
+	  Sdcardfs uses case-insensitive hierarchy (should be enabled)
+
+config SDCARD_FS_RESERVED_SPACE
+	bool "Sdcardfs reserved space support for userdata"
+	depends on SDCARD_FS
+	default y
+	help
+          Leave some sdcardfs space to avoid userdata disk full
+
+config SDCARD_FS_SYSFS
+	bool "Sdcardfs sysfs support"
+	depends on SDCARD_FS
+	default n
+
+config SDCARD_FS_PLUGIN_PRIVACY_SPACE
+	bool "Sdcardfs privacy space plugin"
+	depends on (SDCARD_FS && SDCARD_FS_SYSFS)
+	default n
+

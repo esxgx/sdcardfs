@@ -1,4 +1,4 @@
-/* vim:set ts=4 sw=4 tw=0 noet ft=c:
+/* vim:set ts=8 sw=8 tw=0 noet ft=c:
  *
  * fs/sdcardfs/sdcardfs.h
  *
@@ -37,13 +37,16 @@
 #endif
 
 #include "multiuser.h"
-#include "macros.h"
 
+#ifndef SDCARDFS_SUPER_MAGIC
 /* the file system magic number */
 #define SDCARDFS_SUPER_MAGIC	0x5dca2df5
+#endif
 
+#ifndef SDCARDFS_NAME
 /* the file system name */
-#define SDCARDFS_NAME "sdcardfs"
+#define SDCARDFS_NAME __stringify(__SDCARDFS__)
+#endif
 
 #undef pr_fmt
 #define pr_fmt(fmt)	SDCARDFS_NAME ": " fmt
