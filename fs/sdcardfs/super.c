@@ -46,11 +46,11 @@ static void sdcardfs_put_super(struct super_block *sb)
 	atomic_dec(&lower_mnt->mnt_sb->s_active);
 	mntput(lower_mnt);
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	_path_put(&sbi->basepath);
 #endif
 
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	kobject_put(&sbi->kobj);
 #else
 	kfree(sbi);
@@ -62,7 +62,7 @@ static int sdcardfs_statfs(struct dentry *dentry, struct kstatfs *buf)
 {
 	int err;
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
 	err = vfs_statfs(&sbi->basepath, buf);
 

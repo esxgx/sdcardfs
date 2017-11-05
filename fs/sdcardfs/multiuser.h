@@ -1,21 +1,12 @@
 /*
  * fs/sdcardfs/multiuser.h
  *
- * Copyright (c) 2013 Samsung Electronics Co. Ltd
- *   Authors: Daeho Jeong, Woojoong Lee, Seunghwan Hyun,
- *               Sunghwan Yun, Sungjong Seo
+ * Copyright (C) 2017 HUAWEI, Inc.
+ * Author: gaoxiang <gaoxiang25@huawei.com>
  *
- * This program has been developed as a stackable file system based on
- * the WrapFS which written by
- *
- * Copyright (c) 1998-2011 Erez Zadok
- * Copyright (c) 2009     Shrikar Archak
- * Copyright (c) 2003-2011 Stony Brook University
- * Copyright (c) 2003-2011 The Research Foundation of SUNY
- *
- * This file is dual licensed.  It may be redistributed and/or modified
- * under the terms of the Apache 2.0 License OR version 2 of the GNU
- * General Public License.
+ * This file is subject to the terms and conditions of the GNU General Public
+ * License.  See the file COPYING in the main directory of the Linux
+ * distribution for more details.
  */
 #ifndef __SDCARDFS_MULTIUSER_H
 #define __SDCARDFS_MULTIUSER_H
@@ -25,16 +16,21 @@
 typedef uid_t userid_t;
 typedef uid_t appid_t;
 
-static inline userid_t multiuser_get_user_id(uid_t uid) {
-    return uid / MULTIUSER_APP_PER_USER_RANGE;
+static inline userid_t multiuser_get_user_id(uid_t uid)
+{
+	return uid / MULTIUSER_APP_PER_USER_RANGE;
 }
 
-static inline appid_t multiuser_get_app_id(uid_t uid) {
-    return uid % MULTIUSER_APP_PER_USER_RANGE;
+static inline appid_t multiuser_get_app_id(uid_t uid)
+{
+	return uid % MULTIUSER_APP_PER_USER_RANGE;
 }
 
-static inline uid_t multiuser_get_uid(userid_t userId, appid_t appId) {
-    return userId * MULTIUSER_APP_PER_USER_RANGE + (appId % MULTIUSER_APP_PER_USER_RANGE);
+static inline uid_t multiuser_get_uid(userid_t user_id,
+	appid_t app_id)
+{
+	return user_id * MULTIUSER_APP_PER_USER_RANGE
+		+ (app_id % MULTIUSER_APP_PER_USER_RANGE);
 }
 
 #endif

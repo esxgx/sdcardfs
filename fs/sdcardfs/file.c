@@ -66,7 +66,7 @@ static ssize_t sdcardfs_write(struct file *file, const char __user *buf,
 	struct file *lower_file;
 	struct dentry *dentry = file->f_path.dentry;
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	/* check disk space */
 	if (!check_min_free_space(dentry->d_sb, count, 0)) {
 		infoln("%s, No minimum free space.", __FUNCTION__);
@@ -348,7 +348,7 @@ ssize_t sdcardfs_write_iter(struct kiocb *iocb, struct iov_iter *iter)
 		goto out;
 	}
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	/* check disk space */
 	if (!check_min_free_space(file->f_path.dentry->d_sb,
 		iov_iter_count(iter), 0)) {

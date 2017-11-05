@@ -49,10 +49,10 @@
 
 #ifndef lockless_dereference
 #define lockless_dereference(p) ({ \
-        typeof(p) _________p1 = ACCESS_ONCE(p); \
-        typeof(*(p)) *___typecheck_p __maybe_unused; \
-        smp_read_barrier_depends(); /* Dependency order vs. p above. */ \
-        (_________p1); \
+	typeof(p) _________p1 = ACCESS_ONCE(p); \
+	typeof(*(p)) *___typecheck_p __maybe_unused; \
+	smp_read_barrier_depends(); /* Dependency order vs. p above. */ \
+	(_________p1); \
 })
 #endif
 

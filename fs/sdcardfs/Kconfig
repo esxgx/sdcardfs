@@ -1,5 +1,5 @@
 config SDCARD_FS
-	tristate "Sdcardfs file system"
+	tristate "Sdcardfs file system support"
 	depends on CONFIGFS_FS
 	default n
 	help
@@ -13,7 +13,7 @@ config SDCARD_FS_FADV_NOACTIVE
 	  Sdcardfs supports fadvise noactive mode.
 
 config SDCARD_FS_CASE_INSENSITIVE
-	bool "Sdcardfs case-insensitive support"
+	bool "Sdcardfs case-insensitive hierarchy support"
 	depends on SDCARD_FS
 	default y
 	help
@@ -25,6 +25,13 @@ config SDCARD_FS_RESERVED_SPACE
 	default y
 	help
           Leave some sdcardfs space to avoid userdata disk full
+
+config SDCARD_FS_XATTR
+	bool "Sdcardfs xattr pass-through support"
+	depends on SDCARD_FS
+	default y
+	help
+	  Sdcardfs supports extended file attributes pass-through
 
 config SDCARD_FS_SYSFS
 	bool "Sdcardfs sysfs support"

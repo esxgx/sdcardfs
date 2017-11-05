@@ -15,7 +15,8 @@
 
 #include "trace-events.h"
 
-static int __is_weird_inode(mode_t mode) {
+static int is_weird_inode(mode_t mode)
+{
 	return S_ISBLK(mode) || S_ISCHR(mode) ||
 		S_ISFIFO(mode) || S_ISSOCK(mode) || S_ISLNK(mode);
 }
@@ -33,7 +34,7 @@ struct inode *sdcardfs_ialloc(
 	inode->i_version = 1;
 	inode->i_generation = get_seconds();
 
-	BUG_ON(__is_weird_inode(mode));
+	BUG_ON(is_weird_inode(mode));
 
 	/* use different set of inode ops for symlinks & directories */
 	if (S_ISDIR(mode)) {
@@ -52,10 +53,12 @@ struct inode *sdcardfs_ialloc(
 	return inode;
 }
 
-/* 1) it's optional to lock the parent by the caller.
-      so we cannot assume real_dentry is still hashed now
-   2) sdcardfs_interpose use a real_dentry refcount
-      increased by the caller */
+/*
+ * 1) it's optional to lock the parent by the caller.
+ *    so we cannot assume real_dentry is still hashed now
+ * 2) sdcardfs_interpose use a real_dentry refcount
+ *    increased by the caller
+ */
 struct dentry *sdcardfs_interpose(
 	struct dentry *parent,
 	struct dentry *dentry,
@@ -67,14 +70,18 @@ struct dentry *sdcardfs_interpose(
 	struct inode *inode, *lower_inode;
 	struct super_block *sb = dentry->d_sb;
 
-	/* dentry cannot be seen by others, so it's no need
-	   taking dentry d_lock */
+	/*
+	 * dentry cannot be seen by others, so it's no need
+	 * taking dentry d_lock
+	 */
 	BUG_ON(!d_unhashed(dentry));
 	BUG_ON(d_really_is_positive(dentry));
 
-	/* since the real_dentry is referenced, it cannot turn
-	   into negative state. therefore it is no need taking d_lock.
-	   there are some races with parent, d_name? */
+	/*
+	 * since the real_dentry is referenced, it cannot turn
+	 * into negative state. therefore it is no need taking d_lock.
+	 * there are some races with parent, d_name?
+	 */
 	BUG_ON(d_is_negative(real_dentry));
 
 	te = sdcardfs_init_tree_entry(dentry, real_dentry);
@@ -106,20 +113,21 @@ struct dentry *sdcardfs_interpose(
 	return NULL;
 }
 
-static int __is_weird_dentry(struct dentry *dentry)
+static int is_weird_dentry(struct dentry *dentry)
 {
 	int weird = dentry->d_flags & (DCACHE_NEED_AUTOMOUNT |
 		DCACHE_MANAGE_TRANSIT);
 	if (likely(!weird)) {
-		/* since whether d_inode == NULL has
-		   been checked by the caller */
-		weird = __is_weird_inode(d_inode(dentry)->i_mode);
+		/*
+		 * since whether d_inode is NULL pointer
+		 * has been checked by the caller
+		 */
+		weird = is_weird_inode(d_inode(dentry)->i_mode);
 	}
 	return weird;
 }
 
-static inline
-struct dentry *__after_lookup_real(struct dentry *real)
+static inline struct dentry *after_lookup_real(struct dentry *real)
 {
 	if (IS_ERR(real)) {
 		if (real == ERR_PTR(-ENOENT))
@@ -127,17 +135,18 @@ struct dentry *__after_lookup_real(struct dentry *real)
 	} else if (d_really_is_negative(real)) {
 		dput(real);
 		real = NULL;
-	} else if (__is_weird_dentry(real)) {
+	} else if (is_weird_dentry(real)) {
 		dput(real);
-		/* Don't support traversing automounts
-		   and other weirdness */
+		/*
+		 * Don't support traversing
+		 * automounts and other weirdness
+		 */
 		real = ERR_PTR(-EREMOTE);
 	}
 	return real;
 }
 
-static inline
-struct dentry *__lookup_real_ci(
+static inline struct dentry *lookup_real_ci(
 	struct sdcardfs_sb_info *sbi,
 	struct dentry *dir,
 	struct qstr *orig)
@@ -145,12 +154,14 @@ struct dentry *__lookup_real_ci(
 	struct dentry *dentry;
 
 	inode_lock_nested(d_inode(dir), I_MUTEX_PARENT);
-	dentry = __after_lookup_real(lookup_one_len(orig->name,
+	dentry = after_lookup_real(lookup_one_len(orig->name,
 		dir, orig->len));
 #ifdef SDCARDFS_CASE_INSENSITIVE
-	/* if case-exact lookup don't find a inode and
-	   the case-insensitive lookup is available on
-	   the underlayfs, try to lookup_ci again. */
+	/*
+	 * if case-exact lookup don't find a inode and
+	 * the case-insensitive lookup is available on
+	 * the underlayfs, try to lookup_ci again.
+	 */
 	if (dentry == NULL && sbi->ci->lookup != NULL) {
 		struct dentry *found;
 		struct path path = {.dentry = dir,
@@ -158,7 +169,7 @@ struct dentry *__lookup_real_ci(
 
 		/* remember that lookup(_ci) wont return NULL */
 		found = sbi->ci->lookup(&path, orig, true);
-		dentry = __after_lookup_real(found);
+		dentry = after_lookup_real(found);
 
 		if (unlikely(dentry == NULL && !IS_ERR(found)))
 			dentry = ERR_PTR(-ESTALE);
@@ -168,10 +179,10 @@ struct dentry *__lookup_real_ci(
 	return dentry;
 }
 
-/* parent dir lock should be locked */
-struct dentry *
-sdcardfs_lookup(struct inode *dir,
-	struct dentry *dentry, unsigned int flags)
+struct dentry *sdcardfs_lookup(
+	struct inode *dir,
+	struct dentry *dentry,
+	unsigned int flags)
 {
 	struct dentry *parent;
 	struct dentry *lower_dir_dentry, *ret;
@@ -184,8 +195,10 @@ sdcardfs_lookup(struct inode *dir,
 	parent = dget_parent(dentry);
 	BUG_ON(d_inode(parent) != dir);
 
-	/* d_revalidate should have been triggered. so
-	   the lower_dir_entry must be hashed */
+	/*
+	 * d_revalidate should have been triggered. so
+	 * the lower_dir_entry must be hashed
+	 */
 	lower_dir_dentry = sdcardfs_get_lower_dentry(parent);
 	BUG_ON(lower_dir_dentry == NULL);
 
@@ -199,7 +212,7 @@ sdcardfs_lookup(struct inode *dir,
 		goto out;
 	}
 
-	ret = __lookup_real_ci(sbi, lower_dir_dentry, &dentry->d_name);
+	ret = lookup_real_ci(sbi, lower_dir_dentry, &dentry->d_name);
 	REVERT_CRED(saved_cred);
 	if (ret == NULL) {
 		if (!(flags & (LOOKUP_CREATE | LOOKUP_RENAME_TARGET)))
@@ -218,11 +231,14 @@ sdcardfs_lookup(struct inode *dir,
 	if (!IS_ERR(ret))
 		ret = sdcardfs_interpose(parent, dentry, ret);
 out:
-	/* Only in __sdcardfs_interpose, sdcardfs_init_tree_entry would
-	   be called. So we can d_release a dentry without tree_entry */
+	/*
+	 * Only in __sdcardfs_interpose, sdcardfs_init_tree_entry would
+	 * be called. So we can d_release a dentry without tree_entry
+	 */
 	dput(lower_dir_dentry);
 	dput(parent);
 
 	trace_sdcardfs_lookup(dir, dentry, flags);
 	return ret;
 }
+

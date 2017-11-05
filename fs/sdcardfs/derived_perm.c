@@ -38,7 +38,8 @@ const struct cred *prepare_fsids(struct sdcardfs_sb_info *sbi)
 }
 
 /* Do not directly use this function. Use OVERRIDE_CRED() instead. */
-const struct cred *override_fsids(struct sdcardfs_sb_info *sbi) {
+const struct cred *override_fsids(struct sdcardfs_sb_info *sbi)
+{
 	const struct cred *cred = prepare_fsids(sbi);
 
 	if (cred == NULL)
@@ -103,62 +104,62 @@ void __get_derived_permission(struct super_block *sb, const char *name,
 
 	/* Derive custom permissions based on parent and current node */
 	switch (pi->perm) {
-		case PERM_INHERIT:
-			/* Already inherited above */
-			break;
+	case PERM_INHERIT:
+		/* Already inherited above */
+		break;
 
-		case PERM_PRE_ROOT:
-			/* Legacy internal layout places users at top level */
-			ci->perm = PERM_ROOT;
-			if (!kstrtouint(name, 10, &userid))
-				ci->userid = userid;
-			break;
+	case PERM_PRE_ROOT:
+		/* Legacy internal layout places users at top level */
+		ci->perm = PERM_ROOT;
+		if (!kstrtouint(name, 10, &userid))
+			ci->userid = userid;
+		break;
 
-		case PERM_ROOT:
-			/* Assume masked off by default. */
-			if (!strcasecmp(name, "Android")) {
-				/* App-specific directories inside; let anyone traverse */
-				ci->perm = PERM_ANDROID;
-				ci->under_android = true;
-			/* Moved from check_caller_access_to_name() */
-			/* Always block security-sensitive files at root */
-			} else if (!strcasecmp(name, "autorun.inf")
-				|| !strcasecmp(name, ".android_secure")
-				|| !strcasecmp(name, "android_secure"))
-				ci->perm = PERM_JAILHOUSE;
-			break;
-
-		case PERM_ANDROID:
-			if (!strcasecmp(name, "data")) {
-				/* App-specific directories inside; let anyone traverse */
-				ci->perm = PERM_ANDROID_DATA;
-			} else if (!strcasecmp(name, "obb")) {
-				/* App-specific directories inside; let anyone traverse */
-				ci->perm = PERM_ANDROID_OBB;
-
-				/* Single OBB directory is always shared */
-				/* if shared_obb != NULL, Single OBB directory is available */
-				ci->ovl = SDCARDFS_SB(sb)->shared_obb;
-			} else if (!strcasecmp(name, "media")) {
-				/* App-specific directories inside; let anyone traverse */
-				ci->perm = PERM_ANDROID_MEDIA;
-			}
-			break;
-
-		case PERM_ANDROID_DATA:
-		case PERM_ANDROID_OBB:
-		case PERM_ANDROID_MEDIA:
-			appid = get_appid(name);
-			if (appid < AID_SYSTEM)
-				ci->revision = 0;
-			else
-				ci->d_uid = multiuser_get_uid(pi->userid, appid);
-			break;
-
-		case PERM_JAILHOUSE:
-			/* always denied due to security issues */
+	case PERM_ROOT:
+		/* Assume masked off by default. */
+		if (!strcasecmp(name, "Android")) {
+			/* App-specific directories inside; let anyone traverse */
+			ci->perm = PERM_ANDROID;
+			ci->under_android = true;
+		/* Moved from check_caller_access_to_name() */
+		/* Always block security-sensitive files at root */
+		} else if (!strcasecmp(name, "autorun.inf")
+			|| !strcasecmp(name, ".android_secure")
+			|| !strcasecmp(name, "android_secure"))
 			ci->perm = PERM_JAILHOUSE;
-			break;
+		break;
+
+	case PERM_ANDROID:
+		if (!strcasecmp(name, "data")) {
+			/* App-specific directories inside; let anyone traverse */
+			ci->perm = PERM_ANDROID_DATA;
+		} else if (!strcasecmp(name, "obb")) {
+			/* App-specific directories inside; let anyone traverse */
+			ci->perm = PERM_ANDROID_OBB;
+
+			/* Single OBB directory is always shared */
+			/* if shared_obb != NULL, Single OBB directory is available */
+			ci->ovl = SDCARDFS_SB(sb)->shared_obb;
+		} else if (!strcasecmp(name, "media")) {
+			/* App-specific directories inside; let anyone traverse */
+			ci->perm = PERM_ANDROID_MEDIA;
+		}
+		break;
+
+	case PERM_ANDROID_DATA:
+	case PERM_ANDROID_OBB:
+	case PERM_ANDROID_MEDIA:
+		appid = get_appid(name);
+		if (appid < AID_SYSTEM)
+			ci->revision = 0;
+		else
+			ci->d_uid = multiuser_get_uid(pi->userid, appid);
+		break;
+
+	case PERM_JAILHOUSE:
+		/* always denied due to security issues */
+		ci->perm = PERM_JAILHOUSE;
+		break;
 	}
 }
 

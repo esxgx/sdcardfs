@@ -59,8 +59,10 @@ void sdcardfs_free_tree_entry(struct dentry *dentry)
 			__FUNCTION__, dentry, dentry->d_name.name, te);
 		write_unlock(&te->lock);
 
-		/* dput could lead to reclaim lower_dentry/inode.
-		   so, it is not suitable to put dput in a rwlock */
+		/*
+		 * dput could lead to reclaim lower_dentry/inode.
+		 * so, it is not suitable to put dput in a rwlock
+		 */
 		dput(real);
 		kmem_cache_free(sdcardfs_tree_entry_cachep, te);
 	}
@@ -87,6 +89,7 @@ static struct dentry *__sdcardfs_d_reclaim_alias(
 	unsigned d_seq
 ) {
 	struct dentry *found = NULL;
+
 	if (likely(!hlist_empty(&inode->i_dentry))) {
 		spin_lock(&inode->i_lock);
 		hlist_for_each_entry(found, &inode->i_dentry, d_u.d_alias) {
@@ -176,13 +179,14 @@ _sdcardfs_reactivate_real_locked(
 	write_lock(&te->lock);
 
 	/* safe accessed without te lock */
-	if (!te->real.dentry_invalid) {
+	if (!te->real.dentry_invalid)
 		goto out_unlock;
-	}
 
 	if (real_inode == NULL ||
-	/* if the real_inode is in I_NEW state,
-	   it shouldn't be the original real one */
+	/*
+	 * if the real_inode is in I_NEW state,
+	 * it shouldn't be the original real one
+	 */
 		test_bit(__I_NEW, &real_inode->i_state)) {
 		pivot = NULL;
 		goto out_pivot;

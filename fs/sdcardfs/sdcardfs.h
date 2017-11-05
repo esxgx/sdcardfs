@@ -32,7 +32,7 @@
 #include <linux/list.h>
 #include <linux/fs_struct.h>
 #include <linux/ratelimit.h>
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 #include <linux/kobject.h>
 #endif
 
@@ -88,39 +88,44 @@ void __free_fs_struct(struct fs_struct *fs)
 #define revert_current_fs       override_current_fs
 #define free_fs_struct          __free_fs_struct
 
-/* OVERRIDE_CRED() and REVERT_CRED()
+/*
+ * OVERRIDE_CRED() and REVERT_CRED()
  *  - OVERRIDE_CRED()
  *      backup original task->cred
  *      and modifies task->cred->fsuid/fsgid to specified value.
  *  - REVERT_CRED()
  *      restore original task->cred->fsuid/fsgid.
- * Remember that these two macros should be used in pair */
-
+ * Remember that these two macros should be used in pair
+ */
 #define OVERRIDE_CRED(sdcardfs_sbi, saved_cred) (saved_cred = override_fsids(sdcardfs_sbi))
 #define REVERT_CRED(saved_cred)	revert_fsids(saved_cred)
 
 /* runtime permissions model since Android M */
 
-/* Permission mode for a specific node. Controls how file permissions
- * are derived for children nodes. */
+/*
+ * Permission mode for a specific node. Controls how file permissions
+ * are derived for children nodes.
+ */
 typedef enum {
-    /* Nothing special; this node should just inherit from its parent. */
-    PERM_INHERIT,
-    /* This node is one level above a normal root; used for legacy layouts
-     * which use the first level to represent user_id. */
-    PERM_PRE_ROOT,
-    /* This node is "/" */
-    PERM_ROOT,
-    /* This node is "/Android" */
-    PERM_ANDROID,
-    /* This node is "/Android/data" */
-    PERM_ANDROID_DATA,
-    /* This node is "/Android/obb" */
-    PERM_ANDROID_OBB,
-    /* This node is "/Android/media" */
-    PERM_ANDROID_MEDIA,
-    /* nodes which have security issues */
-    PERM_JAILHOUSE,
+	/* Nothing special; this node should just inherit from its parent. */
+	PERM_INHERIT,
+	/*
+	 * This node is one level above a normal root; used for legacy layouts
+	 * which use the first level to represent user_id.
+	 */
+	PERM_PRE_ROOT,
+	/* This node is "/" */
+	PERM_ROOT,
+	/* This node is "/Android" */
+	PERM_ANDROID,
+	/* This node is "/Android/data" */
+	PERM_ANDROID_DATA,
+	/* This node is "/Android/obb" */
+	PERM_ANDROID_OBB,
+	/* This node is "/Android/media" */
+	PERM_ANDROID_MEDIA,
+	/* nodes which have security issues */
+	PERM_JAILHOUSE,
 } perm_t;
 
 struct sdcardfs_sb_info;
@@ -203,11 +208,13 @@ struct sdcardfs_dir_ci_ops {
 /* sdcardfs super-block data in memory */
 struct sdcardfs_sb_info {
 	struct vfsmount *lower_mnt;
-	/* derived perm policy : some of options have been added
-	 * to sdcardfs_mount_options (Android 4.4 support) */
+	/*
+	 * derived perm policy : some of options have been added
+	 * to sdcardfs_mount_options (Android 4.4 support)
+	 */
 	struct sdcardfs_mount_options options;
 	char *devpath_s;
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	struct path basepath;
 #endif
 	struct dentry *shared_obb;
@@ -215,11 +222,11 @@ struct sdcardfs_sb_info {
 	struct fs_struct *override_fs;
 	struct cred *sdcardd_cred;
 
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	struct kobject kobj;
 #endif
 
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 	int blocked_userid, appid_excluded;
 #endif
 
@@ -262,7 +269,7 @@ struct sdcardfs_tree_entry {
 
 		bool dentry_invalid;
 
-		/* much faster than checking d_parent and d_name in many cases */
+		/* much faster than checking d_parent, d_name in many cases */
 		unsigned d_seq;
 	} real;
 
@@ -461,11 +468,12 @@ static inline void __fix_derived_permission(
 
 	if (opts->gid == AID_SDCARD_RW) {
 		/*
-		 * As an optimization, certain trusted system components only run
-		 * as owner but operate across all users. Since we're now handing
-		 * out the sdcard_rw GID only to trusted apps, we're okay relaxing
-		 * the user boundary enforcement for the default view. The UIDs
-		 * assigned to app directories are still multiuser aware.
+		 * As an optimization, certain trusted system components
+		 * only run as owner but operate across all users.
+		 * Since we're now handing out the sdcard_rw GID only to
+		 * trusted apps, we're okay relaxing the user boundary
+		 * enforcement for the default view. The UIDs assigned to
+		 * app directories are still multiuser aware.
 		 */
 		inode->i_gid = make_kgid(&init_user_ns, AID_SDCARD_RW);
 	} else {
@@ -554,7 +562,7 @@ extern int sdcardfs_configfs_init(void);
 extern void sdcardfs_configfs_exit(void);
 
 /* sysfs.c */
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 extern int sdcardfs_sysfs_init(void);
 extern void sdcardfs_sysfs_exit(void);
 extern int sdcardfs_sysfs_register_sb(struct super_block *);
@@ -586,7 +594,7 @@ permission_denied_to_remove(struct inode *dir, const char *name)
 	return false;
 }
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 /*
  * Return 1, if the disk has enough free space, otherwise 0.
  * We assume that any files can not be overwritten.
@@ -649,7 +657,8 @@ out_nospc:
 #endif
 
 /* Copies attrs and maintains sdcardfs managed attrs */
-static inline void sdcardfs_copy_and_fix_attrs(struct inode *dest, const struct inode *src)
+static inline void sdcardfs_copy_and_fix_attrs(struct inode *dest,
+	const struct inode *src)
 {
 	dest->i_rdev = src->i_rdev;
 	dest->i_atime = src->i_atime;

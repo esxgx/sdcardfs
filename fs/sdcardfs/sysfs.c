@@ -11,7 +11,7 @@
  */
 #include "sdcardfs.h"
 
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 static ssize_t
 sdcardfs_sysfs_sb_blocked_users_show(struct kobject *kobj,
 	struct kobj_attribute *attr, char *buf) {
@@ -106,12 +106,12 @@ sdcardfs_sysfs_attr_store(struct kobject *kobj,
 }
 
 #define __SYSFS_ATTR_RW(name)	\
-	(struct kobj_attribute)__ATTR(name, S_IWUSR | S_IRUGO, \
-sdcardfs_sysfs_sb_##name##_show, sdcardfs_sysfs_sb_##name##_store)
+	((struct kobj_attribute)__ATTR(name, S_IWUSR | S_IRUGO, \
+sdcardfs_sysfs_sb_##name##_show, sdcardfs_sysfs_sb_##name##_store))
 
 #define __SYSFS_ATTR_RO(name)	\
-	(struct kobj_attribute)__ATTR(name, S_IRUGO, \
-sdcardfs_sysfs_sb_##name##_show, NULL)
+	((struct kobj_attribute)__ATTR(name, S_IRUGO, \
+sdcardfs_sysfs_sb_##name##_show, NULL))
 
 static struct sysfs_ops sysfs_op = {
 	.show = sdcardfs_sysfs_attr_show,
@@ -120,7 +120,7 @@ static struct sysfs_ops sysfs_op = {
 
 static struct attribute *sb_attrs[] = {
 	&__SYSFS_ATTR_RO(device).attr,
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 	&__SYSFS_ATTR_RW(blocked_users).attr,
 #endif
 	NULL,	/* need to NULL terminate the list of attributes */

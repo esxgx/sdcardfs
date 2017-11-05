@@ -84,7 +84,7 @@ static int sdcardfs_mkdir(struct inode *dir,
 
 	trace_sdcardfs_mkdir_enter(dir, dentry, mode);
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	if (!check_min_free_space(dir->i_sb, 0, 1)) {
 		errln("%s, No minimum free space.", __FUNCTION__);
 		err = -ENOSPC;
@@ -456,7 +456,7 @@ out:
 static int sdcardfs_permission(struct inode *inode, int mask)
 {
 	bool need_reval;
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 	struct sdcardfs_sb_info *sbi;
 #endif
 	struct sdcardfs_tree_entry *te = inode->i_private;
@@ -477,7 +477,7 @@ static int sdcardfs_permission(struct inode *inode, int mask)
 	if (unlikely(te->perm == PERM_JAILHOUSE))
 		return -EACCES;
 
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 	sbi = SDCARDFS_SB(inode->i_sb);
 
 	if (unlikely(sbi->blocked_userid >= 0)) {
@@ -503,10 +503,12 @@ const struct inode_operations sdcardfs_dir_iops = {
 	.setattr    = sdcardfs_setattr,
 	.getattr    = sdcardfs_getattr,
 
+#ifdef CONFIG_SDCARD_FS_XATTR
 	.setxattr = sdcardfs_setxattr,
 	.getxattr = sdcardfs_getxattr,
 	.listxattr = sdcardfs_listxattr,
 	.removexattr = sdcardfs_removexattr,
+#endif
 };
 
 const struct inode_operations sdcardfs_main_iops = {
@@ -514,8 +516,10 @@ const struct inode_operations sdcardfs_main_iops = {
 	.setattr    = sdcardfs_setattr,
 	.getattr    = sdcardfs_getattr,
 
+#ifdef CONFIG_SDCARD_FS_XATTR
 	.setxattr = sdcardfs_setxattr,
 	.getxattr = sdcardfs_getxattr,
 	.listxattr = sdcardfs_listxattr,
 	.removexattr = sdcardfs_removexattr,
+#endif
 };

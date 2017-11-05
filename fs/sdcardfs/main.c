@@ -231,7 +231,7 @@ static struct dentry *prepare_dir(
 	const char *path_s,
 	mode_t mode, uid_t uid, gid_t gid)
 {
-	struct dentry *dir = makedir(path_s, mode, uid, gid);
+	struct dentry *dir = make_dir(path_s, mode, uid, gid);
 	if (dir == NULL) {
 		struct path path;
 		int err = kern_path(path_s, LOOKUP_DIRECTORY, &path);
@@ -310,7 +310,7 @@ static int sdcardfs_read_super(struct super_block *sb,
 		goto out_freesbi;
 	}
 
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	sbi->basepath = lower_path;
 	path_get(&sbi->basepath);
 #endif
@@ -363,11 +363,11 @@ static int sdcardfs_read_super(struct super_block *sb,
 	snprintf(sbi->devpath_s, PATH_MAX, "%s", dev_name);
 	sbi->devpath_s[PATH_MAX - 1] = '\0';
 
-#ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
+#ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 	sbi->blocked_userid = sbi->appid_excluded = -1;
 #endif
 
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	/* use kobject_unregister instread of kfree to free sbi after succeed */
 	err = sdcardfs_sysfs_register_sb(sb);
 	if (err)
@@ -452,13 +452,13 @@ out_iput:
 out_sput:
 	/* drop refs we took earlier */
 	atomic_dec(&lower_sb->s_active);
-#ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
+#ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	_path_put(&sbi->basepath);
 #endif
 out_freesbi:
 	/* it ensures the right behavior in sdcardfs_put_super */
 	sb->s_fs_info = NULL;
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	if (sbi->kobj.state_initialized)
 		kobject_put(&sbi->kobj);
 	else
@@ -527,7 +527,7 @@ static int __init init_sdcardfs_fs(void)
 	if (err)
 		goto err_tree;
 
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	err = sdcardfs_sysfs_init();
 	if (err)
 		goto err_configfs;
@@ -537,7 +537,7 @@ static int __init init_sdcardfs_fs(void)
 	if (!err)
 		return 0;
 
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	sdcardfs_sysfs_exit();
 err_configfs:
 #endif
@@ -551,7 +551,7 @@ err:
 static void __exit exit_sdcardfs_fs(void)
 {
 	unregister_filesystem(&sdcardfs_fs_type);
-#ifdef SDCARDFS_SYSFS_FEATURE
+#ifdef CONFIG_SDCARD_FS_SYSFS
 	sdcardfs_sysfs_exit();
 #endif
 	sdcardfs_configfs_exit();

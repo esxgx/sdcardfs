@@ -91,8 +91,10 @@ static ssize_t sdcardfs_configfs_attr_store(struct config_item *item,
 
 SDCARDFS_CONFIGFS_ATTR(sdcardfs_configfs_pkgdir, appid);
 
-/* there exists a pkgdir and some attributes for
- * each Android package dir under rootdir */
+/*
+ * there exists a pkgdir and some attributes for
+ * each Android package dir under rootdir
+ */
 static struct configfs_attribute *sdcardfs_configfs_pkgdir_attrs[] = {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
 	&sdcardfs_configfs_pkgdir_attr_appid,
@@ -179,7 +181,8 @@ int sdcardfs_configfs_init(void)
 	return ret;
 }
 
-void sdcardfs_configfs_exit(void) {
+void sdcardfs_configfs_exit(void)
+{
 	configfs_unregister_subsystem(&sdcardfs_configfs_subsys);
 }
 
