@@ -102,7 +102,7 @@ __generic_lookup_ci_begin(struct path *dir,
 
 	if (IS_ERR(file)) {
 		errln("%s: unexpected error when dentry_open, err=%ld",
-			__FUNCTION__, PTR_ERR(file));
+			__func__, PTR_ERR(file));
 		return ERR_CAST(file);
 	}
 
@@ -154,7 +154,7 @@ sdcardfs_generic_may_create_ci(struct path *dir, struct qstr *name)
 	if (IS_ERR(file)) {
 		err = PTR_ERR(file);
 		errln("%s: unexpected error when dentry_open, err=%d",
-			__FUNCTION__, err);
+			__func__, err);
 		return err;
 	}
 	err = __iterate_dir_locked(file, &buffer.ctx);

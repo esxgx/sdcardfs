@@ -56,7 +56,7 @@ void sdcardfs_free_tree_entry(struct dentry *dentry)
 			NULL : te->real.dentry;
 
 		debugln("%s, dentry(%p, %s) free %p",
-			__FUNCTION__, dentry, dentry->d_name.name, te);
+			__func__, dentry, dentry->d_name.name, te);
 		write_unlock(&te->lock);
 
 		/*

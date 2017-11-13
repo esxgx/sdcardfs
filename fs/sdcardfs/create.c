@@ -30,7 +30,7 @@ static int __sdcardfs_do_create_begin(
 
 	if (SDCARDFS_D(dentry) != NULL) {
 		warnln("%s, negative dentry(%s) should not have tree entry",
-			__FUNCTION__, dentry->d_name.name);
+			__func__, dentry->d_name.name);
 		return -ESTALE;
 	}
 

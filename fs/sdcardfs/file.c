@@ -4,6 +4,8 @@
  * Copyright (c) 2013 Samsung Electronics Co. Ltd
  *   Authors: Daeho Jeong, Woojoong Lee, Seunghwan Hyun,
  *               Sunghwan Yun, Sungjong Seo
+ * Copyright (c) 2017 HUAWEI, Inc.
+ *   Authors: Gao Xiang <gaoxiang25@huawei.com>
  *
  * This program has been developed as a stackable file system based on
  * the WrapFS which written by
@@ -69,7 +71,7 @@ static ssize_t sdcardfs_write(struct file *file, const char __user *buf,
 #ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	/* check disk space */
 	if (!check_min_free_space(dentry->d_sb, count, 0)) {
-		infoln("%s, No minimum free space.", __FUNCTION__);
+		infoln("%s, No minimum free space.", __func__);
 		return -ENOSPC;
 	}
 #endif
@@ -352,7 +354,7 @@ ssize_t sdcardfs_write_iter(struct kiocb *iocb, struct iov_iter *iter)
 	/* check disk space */
 	if (!check_min_free_space(file->f_path.dentry->d_sb,
 		iov_iter_count(iter), 0)) {
-		infoln("%s, No minimum free space.", __FUNCTION__);
+		infoln("%s, No minimum free space.", __func__);
 		err = -ENOSPC;
 		goto out;
 	}

@@ -21,10 +21,8 @@ static int is_weird_inode(mode_t mode)
 		S_ISFIFO(mode) || S_ISSOCK(mode) || S_ISLNK(mode);
 }
 
-struct inode *sdcardfs_ialloc(
-	struct super_block *sb,
-	mode_t mode
-){
+struct inode *sdcardfs_ialloc(struct super_block *sb, mode_t mode)
+{
 	struct inode *inode = new_inode(sb);
 
 	if (unlikely(inode == NULL))
@@ -54,20 +52,18 @@ struct inode *sdcardfs_ialloc(
 }
 
 /*
- * 1) it's optional to lock the parent by the caller.
- *    so we cannot assume real_dentry is still hashed now
- * 2) sdcardfs_interpose use a real_dentry refcount
- *    increased by the caller
+ * the caller should take an *extra* real_dentry
+ * reference count for sdcardfs_interpose
  */
 struct dentry *sdcardfs_interpose(
 	struct dentry *parent,
 	struct dentry *dentry,
-	struct dentry *real_dentry
-) {
-	/* d_sb has been assigned by d_alloc */
+	struct dentry *real_dentry)
+{
 	struct sdcardfs_tree_entry *te;
 	struct dentry *lower_dentry;
 	struct inode *inode, *lower_inode;
+	/* d_sb has been assigned by d_alloc */
 	struct super_block *sb = dentry->d_sb;
 
 	/*
@@ -98,7 +94,7 @@ struct dentry *sdcardfs_interpose(
 	inode = sdcardfs_ialloc(sb, lower_inode->i_mode);
 	if (IS_ERR(inode)) {
 		errln("%s, failed to alloc inode, err=%ld",
-			__FUNCTION__, PTR_ERR(inode));
+			__func__, PTR_ERR(inode));
 
 		sdcardfs_free_tree_entry(dentry);
 		return (struct dentry *)inode;
@@ -218,11 +214,12 @@ struct dentry *sdcardfs_lookup(
 		if (!(flags & (LOOKUP_CREATE | LOOKUP_RENAME_TARGET)))
 			ret = ERR_PTR(-ENOENT);
 		else {
-			/* in this case, the dentry is still negative.
-			   fsdata will be initialized in create/rename */
-
-			/* and, we dont need to d_instantiate the dentry */
-			/* since DCACHE_MISS_TYPE == 0x00000000 */
+			/*
+			 * in this case, the dentry is still negative.
+			 * fsdata will be initialized in create/rename
+			 * and we dont need to d_instantiate the dentry
+			 * since DCACHE_MISS_TYPE == 0x00000000
+			 */
 			/* d_instantiate(dentry, NULL); */
 		}
 		goto out;

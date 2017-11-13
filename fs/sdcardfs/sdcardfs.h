@@ -64,9 +64,8 @@
 #include "android_filesystem_config.h"
 
 static inline
-struct fs_struct *override_current_fs(
-	struct fs_struct *fs
-) {
+struct fs_struct *override_current_fs(struct fs_struct *fs)
+{
 	struct fs_struct *saved_fs;
 
 	task_lock(current);
@@ -386,9 +385,11 @@ sdcardfs_real_dentry_rcu_locked(
 	struct dentry *d,
 	struct dentry **real_dentry
 ) {
-	/* it is needed to treat differently for RCU approach.
+	/*
+	 * it is needed to treat differently for RCU approach.
 	 * because countref isnt taken and free_tree_entry
-	 * could be triggered at the same time */
+	 * could be triggered at the same time
+	 */
 	struct sdcardfs_tree_entry *te;
 
 	while ((te = (struct sdcardfs_tree_entry *)xchg(
@@ -530,17 +531,17 @@ static inline int sdcardfs_get_lower_path(
 	if (path->dentry != NULL) {
 		path->mnt = mntget(SDCARDFS_SB(dentry->d_sb)->lower_mnt);
 		debugln("%s, dentry=%p, lower_path(dentry=%p, mnt=%p)",
-			__FUNCTION__, dentry, path->dentry, path->mnt);
+			__func__, dentry, path->dentry, path->mnt);
 		return 0;
 	}
-	debugln("%s, dentry=%p, lower_path(null)", __FUNCTION__, dentry);
+	debugln("%s, dentry=%p, lower_path(null)", __func__, dentry);
 	return -1;
 }
 
 static inline void _path_put(const struct path *path)
 {
 	debugln("%s, lower_path(dentry=%p, mnt=%p)",
-		__FUNCTION__, path->dentry, path->mnt);
+		__func__, path->dentry, path->mnt);
 
 	path_put(path);
 }
@@ -635,7 +636,7 @@ out_nospc:
 			return 0;
 		}
 
-		/* Invalid statfs informations. */
+		/* Invalid statfs information */
 		if (unlikely(!statfs.f_bsize))
 			goto out_invalid;
 

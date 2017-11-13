@@ -79,12 +79,10 @@ retry:
 	dput(real);
 
 	/*
-	 * 1) although we find a dentry with the same name in lower fs,
-	 *    it's not the old real dentry stored in tree_entry
-	 * 2) if real isn't found(negative dentry)
+	 * although we find a dentry with the same name in lower fs,
+	 * it's not the old real dentry stored in tree_entry
 	 */
-	if (this->real_dentry != real/* &&
-		d_is_negative(real)*/) {
+	if (this->real_dentry != real) {
 		err = -ESTALE;
 
 		/* since we dont support hashed but negative dentry */

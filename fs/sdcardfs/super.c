@@ -34,7 +34,7 @@ static void sdcardfs_put_super(struct super_block *sb)
 
 	if (sbi->devpath_s == NULL)
 		errln("%s, unexpected sbi->devpath_s == NULL",
-			__FUNCTION__);
+			__func__);
 	else {
 		infoln("unmounting on top of %s", sbi->devpath_s);
 		__putname(sbi->devpath_s);
@@ -64,12 +64,13 @@ static int sdcardfs_statfs(struct dentry *dentry, struct kstatfs *buf)
 
 #ifdef CONFIG_SDCARD_FS_RESERVED_SPACE
 	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(dentry->d_sb);
+
 	err = vfs_statfs(&sbi->basepath, buf);
 
 	if (sbi->options.reserved_mb) {
 		u64 min_blocks;
 
-		/* Invalid statfs informations. */
+		/* Invalid statfs information */
 		if (!buf->f_bsize) {
 			errln("f_bsize == 0 returned by underlay_statfs.");
 			return -EINVAL;
@@ -100,18 +101,17 @@ static int sdcardfs_statfs(struct dentry *dentry, struct kstatfs *buf)
 	return err;
 }
 
-/*
- * Handle the sdcard file system remount operation
- * @flags: numeric mount options
- * @options: mount options string
- */
-static int sdcardfs_remount_fs(struct super_block *sb, int *flags, char *options)
+/* Handle the sdcard file system remount operation */
+static int sdcardfs_remount_fs(struct super_block *sb,
+	int *flags, char *options)
 {
 	int err = 0;
 
-	/* The VFS will take care of "ro" and "rw" flags among others.  We
-	   can safely accept a few flags (RDONLY, MANDLOCK), and honor
-	   SILENT, but anything else left over is an error. */
+	/*
+	 * The VFS will take care of "ro" and "rw" flags among others. We
+	 * can safely accept a few flags (RDONLY, MANDLOCK), and honor
+	 * SILENT, but anything else left over is an error.
+	 */
 	if ((*flags & ~(MS_RDONLY | MS_MANDLOCK | MS_SILENT)) != 0) {
 		errln("remount flags 0x%x unsupported", *flags);
 		err = -EINVAL;

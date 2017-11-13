@@ -14,24 +14,24 @@
 #include <linux/version.h>
 
 static ssize_t
-sdcardfs_configfs_pkgdir_appid_show(
-	struct config_item *item, char *page
-) {
-	struct sdcardfs_packagelist_entry *pkg = container_of(
-		item, struct sdcardfs_packagelist_entry, item);
+sdcardfs_configfs_pkgdir_appid_show(struct config_item *item,
+	char *page)
+{
+	struct sdcardfs_packagelist_entry *pkg = container_of(item,
+		struct sdcardfs_packagelist_entry, item);
 
 	return sprintf(page, "%d\n", (int)pkg->appid);
 }
 
-static ssize_t sdcardfs_configfs_pkgdir_appid_store(
-	struct config_item *item,
-	const char *page, size_t count
-) {
+static ssize_t
+sdcardfs_configfs_pkgdir_appid_store(struct config_item *item,
+	const char *page, size_t count)
+{
 	unsigned int tmp;
 	int ret;
 
-	struct sdcardfs_packagelist_entry *pkg = container_of(
-		item, struct sdcardfs_packagelist_entry, item);
+	struct sdcardfs_packagelist_entry *pkg = container_of(item,
+		struct sdcardfs_packagelist_entry, item);
 
 	ret = kstrtouint(page, 10, &tmp);
 	if (ret)
@@ -105,12 +105,10 @@ static struct configfs_attribute *sdcardfs_configfs_pkgdir_attrs[] = {
 };
 
 /* remove a pkgdir */
-static
-void sdcardfs_configfs_pkgdir_item_release(
-	struct config_item *item
-) {
-	struct sdcardfs_packagelist_entry *pkg = container_of(
-		item, struct sdcardfs_packagelist_entry, item);
+static void sdcardfs_configfs_pkgdir_item_release(struct config_item *item)
+{
+	struct sdcardfs_packagelist_entry *pkg = container_of(item,
+		struct sdcardfs_packagelist_entry, item);
 
 	sdcardfs_packagelist_entry_release(pkg);
 }
@@ -131,12 +129,10 @@ static struct config_item_type sdcardfs_configfs_pkgdir_type = {
 };
 
 /* rootdir consists of all pkgdirs + an extersion dir */
-static
-struct config_item *
-sdcardfs_configfs_rootdir_group_make_item(
-	struct config_group *group,
-	const char *name
-) {
+static struct config_item *
+sdcardfs_configfs_rootdir_group_make_item(struct config_group *group,
+	const char *name)
+{
 	struct sdcardfs_packagelist_entry *pkg;
 
 	pkg = sdcardfs_packagelist_entry_alloc();

@@ -14,7 +14,8 @@
 #ifdef CONFIG_SDCARD_FS_PLUGIN_PRIVACY_SPACE
 static ssize_t
 sdcardfs_sysfs_sb_blocked_users_show(struct kobject *kobj,
-	struct kobj_attribute *attr, char *buf) {
+	struct kobj_attribute *attr, char *buf)
+{
 
 	struct sdcardfs_sb_info *sbi = container_of(kobj,
 		struct sdcardfs_sb_info, kobj);
@@ -31,7 +32,8 @@ sdcardfs_sysfs_sb_blocked_users_show(struct kobject *kobj,
 static ssize_t
 sdcardfs_sysfs_sb_blocked_users_store(struct kobject *kobj,
 	struct kobj_attribute *attr,
-	const char *buf, size_t len) {
+	const char *buf, size_t len)
+{
 
 	struct sdcardfs_sb_info *sbi = container_of(kobj,
 		struct sdcardfs_sb_info, kobj);
@@ -61,7 +63,8 @@ sdcardfs_sysfs_sb_blocked_users_store(struct kobject *kobj,
 
 static ssize_t
 sdcardfs_sysfs_sb_device_show(struct kobject *kobj,
-	struct kobj_attribute *attr, char *buf) {
+	struct kobj_attribute *attr, char *buf)
+{
 
 	struct sdcardfs_sb_info *sbi = container_of(kobj,
 		struct sdcardfs_sb_info, kobj);
@@ -93,8 +96,8 @@ sdcardfs_sysfs_attr_store(struct kobject *kobj,
 	size_t len)
 {
 	struct kobj_attribute *ka;
-
 	char *s = skip_spaces(buf);
+
 	len -= s - buf;
 	buf = s;
 
@@ -113,7 +116,7 @@ sdcardfs_sysfs_sb_##name##_show, sdcardfs_sysfs_sb_##name##_store))
 	((struct kobj_attribute)__ATTR(name, S_IRUGO, \
 sdcardfs_sysfs_sb_##name##_show, NULL))
 
-static struct sysfs_ops sysfs_op = {
+static const struct sysfs_ops sysfs_op = {
 	.show = sdcardfs_sysfs_attr_show,
 	.store = sdcardfs_sysfs_attr_store
 };
@@ -143,8 +146,6 @@ int sdcardfs_sysfs_init(void)
 
 void sdcardfs_sysfs_exit(void)
 {
-	BUG_ON(sdcardfs_kset == NULL);
-
 	kset_unregister(sdcardfs_kset);
 }
 
@@ -152,8 +153,6 @@ int sdcardfs_sysfs_register_sb(struct super_block *sb)
 {
 	int err;
 	struct sdcardfs_sb_info *sbi = SDCARDFS_SB(sb);
-
-	BUG_ON(sdcardfs_kset == NULL);
 
 	sbi->kobj.kset = sdcardfs_kset;
 	err = kobject_init_and_add(&sbi->kobj, &sb_ktype, NULL,

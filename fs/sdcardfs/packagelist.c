@@ -13,7 +13,8 @@
 #include "packagelist.h"
 #include <linux/ctype.h>
 
-DEFINE_HASHTABLE(pkgl_hashtable, 8);
+static DEFINE_HASHTABLE(pkgl_hashtable, 8);
+static DEFINE_SPINLOCK(pkgl_hashtable_lock);
 
 /* BKDR Hash Function */
 static u32 str_hash(const char *str)
@@ -53,12 +54,15 @@ sdcardfs_packagelist_entry_alloc(void)
 
 void sdcardfs_packagelist_entry_register(
 	struct sdcardfs_packagelist_entry *pkg,
-	const char *app_name, appid_t appid
-) {
+	const char *app_name, appid_t appid)
+{
 	pkg->app_name = kstrdup(app_name, GFP_KERNEL);
 	pkg->appid = appid;
+
+	spin_lock(&pkgl_hashtable_lock);
 	hash_add_rcu(pkgl_hashtable, &pkg->hlist,
 		str_hash(app_name));
+	spin_unlock(&pkgl_hashtable_lock);
 }
 
 static void __rcu_free(struct rcu_head *rcu)
@@ -72,9 +76,12 @@ static void __rcu_free(struct rcu_head *rcu)
 }
 
 void sdcardfs_packagelist_entry_release(
-	struct sdcardfs_packagelist_entry *pkg
-) {
+	struct sdcardfs_packagelist_entry *pkg)
+{
+	spin_lock(&pkgl_hashtable_lock);
 	hash_del_rcu(&pkg->hlist);
+	spin_unlock(&pkgl_hashtable_lock);
+
 	call_rcu(&pkg->rcu, __rcu_free);
 }
 

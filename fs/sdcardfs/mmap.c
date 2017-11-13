@@ -4,6 +4,8 @@
  * Copyright (c) 2013 Samsung Electronics Co. Ltd
  *   Authors: Daeho Jeong, Woojoong Lee, Seunghwan Hyun,
  *               Sunghwan Yun, Sungjong Seo
+ * Copyright (c) 2017 HUAWEI, Inc.
+ *   Authors: Gao Xiang <gaoxiang25@huawei.com>
  *
  * This program has been developed as a stackable file system based on
  * the WrapFS which written by

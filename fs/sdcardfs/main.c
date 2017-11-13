@@ -164,8 +164,8 @@ static int __sdcardfs_setup_root(
 	struct dentry *root,
 	struct dentry *realdir,
 	userid_t userid,
-	int multiuser
-) {
+	int multiuser)
+{
 	struct sdcardfs_tree_entry *te;
 	struct inode *inode;
 
@@ -184,8 +184,10 @@ static int __sdcardfs_setup_root(
 
 	inode = d_inode(root);
 
-	/* if inode->i_version < te->revision,
-	   uid/gid/mode will be updated at the right time */
+	/*
+	 * if inode->i_version < te->revision,
+	 * uid/gid/mode will be updated at the right time
+	 */
 	inode->i_version = te->revision;
 
 	/* used for revalidate in inode_permission */
@@ -200,13 +202,16 @@ static struct dentry *make_dir(
 	mode_t mode, uid_t uid, gid_t gid)
 {
 	struct path parent;
+
 	struct dentry *dent = kern_path_create(AT_FDCWD,
 		path_s, &parent, LOOKUP_DIRECTORY);
+
 	if (IS_ERR(dent)) {
 		if (dent == ERR_PTR(-EEXIST))
 			dent = NULL;
 	} else {
 		int err = vfs_mkdir(d_inode(parent.dentry), dent, mode);
+
 		if (err) {
 			done_path_create(&parent, dent);
 			dent = ERR_PTR(err);
@@ -224,6 +229,7 @@ static struct dentry *make_dir(
 			done_path_create(&parent, dent);
 		}
 	}
+
 	return dent;
 }
 
@@ -232,6 +238,7 @@ static struct dentry *prepare_dir(
 	mode_t mode, uid_t uid, gid_t gid)
 {
 	struct dentry *dir = make_dir(path_s, mode, uid, gid);
+
 	if (dir == NULL) {
 		struct path path;
 		int err = kern_path(path_s, LOOKUP_DIRECTORY, &path);
@@ -268,7 +275,7 @@ static int sdcardfs_read_super(struct super_block *sb,
 	sb->s_magic = SDCARDFS_SUPER_MAGIC;
 
 	if (dev_name == NULL) {
-		errln("%s, missing dev_name argument", __FUNCTION__);
+		errln("%s, missing dev_name argument", __func__);
 		err = -EINVAL;
 		goto out;
 	}
@@ -280,14 +287,14 @@ static int sdcardfs_read_super(struct super_block *sb,
 	err = kern_path(dev_name, LOOKUP_FOLLOW | LOOKUP_DIRECTORY,
 			&lower_path);
 	if (err) {
-		errln("%s, error accessing device '%s'", __FUNCTION__, dev_name);
+		errln("%s, error accessing device '%s'", __func__, dev_name);
 		goto out;
 	}
 
 	lower_inode = d_inode(lower_path.dentry);
 	if (!S_ISDIR(lower_inode->i_mode)) {
 		errln("%s, device '%s' should be a directory",
-			__FUNCTION__, dev_name);
+			__func__, dev_name);
 		err = -EINVAL;
 		goto out_free;
 	}
@@ -295,7 +302,7 @@ static int sdcardfs_read_super(struct super_block *sb,
 	/* allocate superblock private data */
 	sbi = kzalloc(sizeof(struct sdcardfs_sb_info), GFP_KERNEL);
 	if (sbi == NULL) {
-		critln("%s, out of memory", __FUNCTION__);
+		critln("%s, out of memory", __func__);
 		err = -ENOMEM;
 		goto out_free;
 	}
@@ -306,7 +313,7 @@ static int sdcardfs_read_super(struct super_block *sb,
 	/* parse options */
 	err = sdcardfs_parse_options(&sbi->options, raw_data, silent, &debug);
 	if (err) {
-		errln("%s, invalid options", __FUNCTION__);
+		errln("%s, invalid options", __func__);
 		goto out_freesbi;
 	}
 
@@ -328,8 +335,10 @@ static int sdcardfs_read_super(struct super_block *sb,
 	/* inherit maxbytes from lower file system */
 	sb->s_maxbytes = lower_sb->s_maxbytes;
 
-	/* Our c/m/atime granularity is 1 ns because we may stack on file
-	   systems whose granularity is as good. */
+	/*
+	 * Our c/m/atime granularity is 1 ns because we may stack on file
+	 * systems whose granularity is as good.
+	 */
 	sb->s_time_gran = 1;
 	sb->s_op = &sdcardfs_sops;
 	sb->s_d_op = &sdcardfs_ci_dops;
@@ -390,7 +399,7 @@ static int sdcardfs_read_super(struct super_block *sb,
 		sbi->sdcardd_cred = prepare_creds();
 		if (sbi->sdcardd_cred == NULL) {
 			errln("%s, failed to prepare creds "
-				"in order to override secid", __FUNCTION__);
+				"in order to override secid", __func__);
 			sbi->options.has_fssecid = false;
 		}
 	}

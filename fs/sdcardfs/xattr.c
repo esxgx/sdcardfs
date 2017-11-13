@@ -5,6 +5,8 @@
  * Copyright (c) 2013 Samsung Electronics Co. Ltd
  *   Authors: Daeho Jeong, Woojoong Lee, Seunghwan Hyun,
  *               Sunghwan Yun, Sungjong Seo
+ * Copyright (c) 2017 HUAWEI, Inc.
+ *   Authors: Gao Xiang <gaoxiang25@huawei.com>
  *
  * This file is subject to the terms and conditions of the GNU General Public
  * License.  See the file COPYING in the main directory of the Linux

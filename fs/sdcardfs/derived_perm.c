@@ -25,6 +25,7 @@ const struct cred *prepare_fsids(struct sdcardfs_sb_info *sbi)
 		const struct cred *saved_cred = override_creds(sbi->sdcardd_cred);
 		if (likely(saved_cred != NULL)) {
 			int ret = set_security_override(cred, sbi->options.fs_low_secid);
+
 			if (unlikely(ret < 0)) {
 				critln("Security denies permission to nominate"
 					" security context: %d", ret);
@@ -56,13 +57,11 @@ void revert_fsids(const struct cred *old_cred)
 	put_cred(cur_cred);
 }
 
-struct fs_struct *prepare_fs_struct(
-	struct path *root,
-	int umask
-) {
-	struct fs_struct *fs;
+struct fs_struct *prepare_fs_struct(struct path *root, int umask)
+{
+	struct fs_struct *fs =
+		kzalloc(sizeof(struct fs_struct), GFP_KERNEL);
 
-	fs = kzalloc(sizeof(struct fs_struct), GFP_KERNEL);
 	if (fs == NULL)
 		return NULL;
 
@@ -83,8 +82,8 @@ struct fs_struct *prepare_fs_struct(
 static inline void
 __inherit_derived_state(
 	struct sdcardfs_tree_entry *pi,	/* parent tree entry */
-	struct sdcardfs_tree_entry *ci		/* tree entry that we want to inherit */
-) {
+	struct sdcardfs_tree_entry *ci)	/* tree entry that we want to inherit */
+{
 	ci->revision = pi->revision;
 
 	ci->perm = PERM_INHERIT;
@@ -118,11 +117,12 @@ void __get_derived_permission(struct super_block *sb, const char *name,
 	case PERM_ROOT:
 		/* Assume masked off by default. */
 		if (!strcasecmp(name, "Android")) {
-			/* App-specific directories inside; let anyone traverse */
 			ci->perm = PERM_ANDROID;
 			ci->under_android = true;
-		/* Moved from check_caller_access_to_name() */
-		/* Always block security-sensitive files at root */
+		/*
+		 * Moved from check_caller_access_to_name()
+		 * Always block security-sensitive files at root
+		 */
 		} else if (!strcasecmp(name, "autorun.inf")
 			|| !strcasecmp(name, ".android_secure")
 			|| !strcasecmp(name, "android_secure"))
@@ -131,17 +131,19 @@ void __get_derived_permission(struct super_block *sb, const char *name,
 
 	case PERM_ANDROID:
 		if (!strcasecmp(name, "data")) {
-			/* App-specific directories inside; let anyone traverse */
+			/* App-specific directories inside */
 			ci->perm = PERM_ANDROID_DATA;
 		} else if (!strcasecmp(name, "obb")) {
-			/* App-specific directories inside; let anyone traverse */
+			/* App-specific directories inside */
 			ci->perm = PERM_ANDROID_OBB;
 
-			/* Single OBB directory is always shared */
-			/* if shared_obb != NULL, Single OBB directory is available */
+			/*
+			 * if shared_obb != NULL, shared obb
+			 * for multiuser is available
+			 */
 			ci->ovl = SDCARDFS_SB(sb)->shared_obb;
 		} else if (!strcasecmp(name, "media")) {
-			/* App-specific directories inside; let anyone traverse */
+			/* App-specific directories inside */
 			ci->perm = PERM_ANDROID_MEDIA;
 		}
 		break;
